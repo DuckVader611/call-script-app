@@ -90,7 +90,7 @@ const flow = {
   start: {
     id: "start",
     label: "Introduction",
-    script: "Good morning/afternoon, thank you for calling United Consumer Relief. This is [Agent Name]. How can I assist you today?",
+    script: "Good morning/afternoon! Thanks for calling the Debt Relief Center — this is [Agent Name]. How can we help you get a fresh start with your debts today?",
     options: [{ text: "Continue", next: "qualify" }]
   },
   qualify: {
@@ -105,7 +105,7 @@ const flow = {
   checkDebt: {
     id: "checkDebt",
     label: "Check Debt Amount",
-    script: "What is your total unsecured debt amount? We typically work with clients who have $10,000 or more in debt.",
+    script: "What's your total amount of unsecured debt you're looking to resolve today? This will help us understand what type of program might be best suited for your situation.",
     options: [
       { text: "≥ $10,000", next: "checkState" },
       { text: "< $10,000", next: "notQualified" }
@@ -192,10 +192,17 @@ const flow = {
   elevateFSPFlow: {
     id: "elevateFSPFlow",
     label: "Elevate Finance Program",
-    script: "Great news! Based on your state, you'll be working with Elevate Finance, LLC. They offer a comprehensive debt relief program with a 27% fee structure. Would you like to proceed with the qualification process?",
+    script: "Great news! Based on your state, you'll be working with Elevate Finance, LLC. Let's verify your qualification by reviewing some specific requirements.",
     options: [
-      { text: "Yes", next: "checkDebt" },
-      { text: "No", next: "start" }
+      { text: "Continue", next: "elevateQualification" }
+    ]
+  },
+  elevateQualification: {
+    id: "elevateQualification",
+    label: "Program Qualification",
+    script: "I'll need to ask you some specific questions about your debt to ensure you qualify for our program. Let's go through them one by one.",
+    options: [
+      { text: "Continue", next: "showQualificationModal" }
     ]
   },
   clarityFlow: {
@@ -213,7 +220,7 @@ const translatedFlow = {
   start: {
     id: "start",
     label: "Introducción",
-    script: "Buenos días/tardes, gracias por llamar a United Consumer Relief. Le habla [Nombre del Agente]. ¿Cómo puedo ayudarle hoy?",
+    script: "¡Buenos días/tardes! Gracias por llamar al Centro de Alivio de Deudas — le habla [Nombre del Agente]. ¿Cómo podemos ayudarle a tener un nuevo comienzo con sus deudas hoy?",
     options: [{ text: "Continuar", next: "qualify" }]
   },
   qualify: {
@@ -228,7 +235,7 @@ const translatedFlow = {
   checkDebt: {
     id: "checkDebt",
     label: "Verificar Monto de Deuda",
-    script: "¿Cuál es el monto total de su deuda no garantizada? Típicamente trabajamos con clientes que tienen $10,000 o más en deudas.",
+    script: "¿Cuál es el monto total de deuda no garantizada que desea resolver hoy? Esto nos ayudará a entender qué tipo de programa podría ser el más adecuado para su situación.",
     options: [
       { text: "≥ $10,000", next: "checkState" },
       { text: "< $10,000", next: "notQualified" }
@@ -315,10 +322,17 @@ const translatedFlow = {
   elevateFSPFlow: {
     id: "elevateFSPFlow",
     label: "Programa Elevate Finance",
-    script: "¡Buenas noticias! Según su estado, trabajará con Elevate Finance, LLC. Ofrecen un programa integral de alivio de deudas con una estructura de tarifas del 27%. ¿Le gustaría continuar con el proceso de calificación?",
+    script: "¡Buenas noticias! Según su estado, trabajará con Elevate Finance, LLC. Verifiquemos su calificación revisando algunos requisitos específicos.",
     options: [
-      { text: "Yes", next: "checkDebt" },
-      { text: "No", next: "start" }
+      { text: "Continuar", next: "elevateQualification" }
+    ]
+  },
+  elevateQualification: {
+    id: "elevateQualification",
+    label: "Calificación del Programa",
+    script: "Necesito hacerle algunas preguntas específicas sobre su deuda para asegurar que califique para nuestro programa. Vamos a revisarlas una por una.",
+    options: [
+      { text: "Continuar", next: "showQualificationModal" }
     ]
   },
   clarityFlow: {
@@ -536,6 +550,44 @@ const stateNotes = {
 // List of states we don't service
 const unsupportedStates = ['MN', 'OR', 'WA', 'WI'];
 
+// Add these constants at the top with other constants
+const acceptableDebtTypes = {
+  "Major credit cards": { max: 100, min: 500 },
+  "Department store cards": { max: 100, min: 500 },
+  "Unsecured personal/bank loans": { max: 100, min: 500 },
+  "Gas cards": { max: 100, min: 500 },
+  "Jewelry cards": { max: 100, min: 500 },
+  "Computer/Electronics debt": { max: 100, min: 500 },
+  "Cell phone debt (not current carrier)": { max: 100, min: 500 },
+  "Back rent (not current residence)": { max: 100, min: 500 },
+  "Medical debt": { max: 25, min: 500 },
+  "Private student loans": { max: 25, min: 500, requirements: "Must be out of school and show proof it's private" },
+  "High-interest loans": { max: 25, min: 500, requirements: "Conditions apply" },
+  "Auto/Motorcycle loan deficiencies": { max: 100, min: 500, requirements: "3rd-party collections only, documentation required" },
+  "Business debts": { max: 100, min: 500, requirements: "Business must be closed, conditions apply" },
+  "Utilities (not current residence)": { max: 100, min: 500 },
+  "Cash advances": { max: 100, min: 500, requirements: "Original documentation required" }
+};
+
+const monthlyMinimums = {
+  "10k-19999": 310,
+  "20k-29999": 350,
+  "30k+": 450
+};
+
+const acceptableCreditors = {
+  standard: ["Bank of America", "Chase", "Wells Fargo", "Capital One"],
+  limited: ["Navy Federal Credit Union", "USAA"],
+  percentage: {
+    "Discover": 70,
+    "American Express": 70
+  },
+  restricted: {
+    "Oportun": "Not available in CA",
+    "Rise": "Not available in CA"
+  }
+};
+
 function App() {
   const [language, setLanguage] = useState("en");
   const [step, setStep] = useState(flow.start);
@@ -646,11 +698,15 @@ function App() {
   }, []);
 
   const handleStepChange = useCallback((option) => {
-    setStep(prev => {
-      const nextStep = currentFlow[option.next];
-      addToLog(`Moved from "${prev.label}" to "${nextStep.label}"`);
-      return nextStep;
-    });
+    if (option.next === "showQualificationModal") {
+      setShowQualificationModal(true);
+    } else {
+      setStep(prev => {
+        const nextStep = currentFlow[option.next];
+        addToLog(`Moved from "${prev.label}" to "${nextStep.label}"`);
+        return nextStep;
+      });
+    }
   }, [currentFlow, addToLog]);
 
   const handleStateSelection = useCallback((state) => {
@@ -712,7 +768,20 @@ function App() {
       setShowChecklistWarning(true);
     } else {
       setStep(flow.start);
-      addToLog('Returned to start');
+      // Reset checklist when returning to start with completed checklist
+      setChecklist({
+        1: false,
+        2: false,
+        3: false,
+        4: false,
+        5: false,
+        6: false,
+        7: false,
+        8: false,
+        9: false,
+        10: false
+      });
+      addToLog('Returned to start - Checklist cleared');
     }
   };
 
@@ -806,6 +875,39 @@ function App() {
     }
   }, [currentStep.id, language, selectedState, handleStateSelection]);
 
+  // Add this inside the App component, after the existing state declarations
+  const [qualificationData, setQualificationData] = useState({
+    totalDebt: 0,
+    debtTypes: [],
+    hasMinimumPerCreditor: false,
+    canAutoPayments: false,
+    hasCreditorPaymentHistory: false,
+    hasRequiredDocs: false
+  });
+
+  // Update the checkQualification function
+  const checkQualification = () => {
+    // Check if at least one debt type is selected
+    if (qualificationData.debtTypes.length === 0) return false;
+    
+    // Calculate total debt
+    const totalDebt = qualificationData.debtTypes.reduce((sum, debt) => sum + (parseFloat(debt.amount) || 0), 0);
+    
+    // Check minimum total debt requirement ($10,000)
+    if (totalDebt < 10000) return false;
+    
+    // Check required checkboxes
+    if (!qualificationData.hasMinimumPerCreditor) return false;  // $500 per creditor
+    if (!qualificationData.canAutoPayments) return false;        // Auto-draft payments
+    if (!qualificationData.hasCreditorPaymentHistory) return false;  // At least 1 payment made
+    if (!qualificationData.hasRequiredDocs) return false;        // Required documentation
+    
+    return true;
+  };
+
+  // Add state for qualification modal
+  const [showQualificationModal, setShowQualificationModal] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-row relative">
       {/* Left Panel - Objections */}
@@ -844,7 +946,7 @@ function App() {
               {/* Logo */}
               <div className="flex justify-center mb-6">
                 <img 
-                  src="/images/UCR.jpg"
+                  src="/call-script-app/images/UCR.jpg"
                   alt="United Consumer Relief Logo"
                   className="h-48 object-contain"
                 />
@@ -852,15 +954,30 @@ function App() {
               
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold">{currentStep.label}</h1>
-                <select
-                  value={language}
-                  onChange={e => setLanguage(e.target.value)}
-                  className="border rounded px-2 py-1 text-sm"
-                >
-                  {Object.entries(languageOptions).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
-                </select>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setLanguage("en")}
+                    className={`px-4 py-2 rounded-lg ${
+                      language === "en" 
+                        ? "bg-blue-500 text-white" 
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                    title="English"
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => setLanguage("es")}
+                    className={`px-4 py-2 rounded-lg ${
+                      language === "es" 
+                        ? "bg-blue-500 text-white" 
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                    title="Español"
+                  >
+                    ES
+                  </button>
+                </div>
               </div>
               
               <div 
@@ -940,6 +1057,13 @@ function App() {
                       </div>
                     </div>
                   </div>
+
+                  <div className="text-base leading-relaxed mt-4">
+                    {language === "es" 
+                      ? `Solo para asegurarme de que tengo todo correcto, mencionó que su deuda total no garantizada es aproximadamente ${formatCurrency(totalDebt)}, ¿es correcto?`
+                      : `Just to make sure I have everything correct, you mentioned that your total unsecured debt is around ${formatCurrency(totalDebt)}, is that right?`
+                    }
+                  </div>
                 </div>
               )}
 
@@ -1006,6 +1130,8 @@ function App() {
                         onClick={() => {
                           if (currentStep.id === "checkState" && option.text === "Continue") {
                             handleStateStepContinue();
+                          } else if (currentStep.id === "elevateQualification" && option.text === "Continue") {
+                            setShowQualificationModal(true);
                           } else {
                             handleStepChange(option);
                           }
@@ -1123,15 +1249,26 @@ function App() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
-            <button
-              onClick={() => {
-                setNotes(notes);
-                setShowObjections(true);
-              }}
-              className="bg-green-600 text-white py-1 px-3 rounded hover:bg-green-700 text-sm mb-4"
-            >
-              {language === "es" ? "Guardar Notas" : "Save Notes"}
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(notes);
+                  addToLog(language === "es" ? "Notas copiadas" : "Notes copied");
+                }}
+                className="flex-1 bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700 text-sm"
+              >
+                {language === "es" ? "Copiar Notas" : "Copy Notes"}
+              </button>
+              <button
+                onClick={() => {
+                  setNotes("");
+                  addToLog(language === "es" ? "Notas borradas" : "Notes cleared");
+                }}
+                className="flex-1 bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700 text-sm"
+              >
+                {language === "es" ? "Borrar Notas" : "Clear Notes"}
+              </button>
+            </div>
 
             {/* Call Completion Checklist */}
             <div className="mt-4 border-t pt-4">
@@ -1264,6 +1401,201 @@ function App() {
               >
                 {language === "es" ? "Continuar Trabajando" : "Continue Working"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* Qualification Modal */}
+      {showQualificationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-800">Qualification Requirements</h2>
+                <button
+                  onClick={() => setShowQualificationModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Debt Type Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Select Debt Types:</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                  {Object.entries(acceptableDebtTypes).map(([type, info], index) => (
+                    <div key={index} className="flex items-center p-2 hover:bg-gray-50 rounded">
+                      <input
+                        type="checkbox"
+                        checked={qualificationData.debtTypes.some(d => d.type === type)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setQualificationData(prev => ({
+                              ...prev,
+                              debtTypes: [...prev.debtTypes, { type, amount: 0 }]
+                            }));
+                          } else {
+                            setQualificationData(prev => ({
+                              ...prev,
+                              debtTypes: prev.debtTypes.filter(d => d.type !== type)
+                            }));
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      <span>{type}</span>
+                      {info.requirements && (
+                        <span className="ml-2 text-sm text-gray-500">({info.requirements})</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Amount Inputs for Selected Debt Types */}
+              {qualificationData.debtTypes.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="font-medium mb-2">Enter Debt Amounts:</h4>
+                  <div className="space-y-2">
+                    {qualificationData.debtTypes.map((debt, index) => (
+                      <div key={index} className="flex items-center space-x-2 bg-gray-50 p-3 rounded">
+                        <span className="w-1/2">{debt.type}:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={debt.amount}
+                          onChange={(e) => {
+                            const newAmount = parseFloat(e.target.value) || 0;
+                            setQualificationData(prev => ({
+                              ...prev,
+                              debtTypes: prev.debtTypes.map(d => 
+                                d.type === debt.type ? { ...d, amount: newAmount } : d
+                              ),
+                              totalDebt: prev.debtTypes.reduce((sum, d) => 
+                                sum + (d.type === debt.type ? newAmount : (d.amount || 0)), 0
+                              )
+                            }));
+                          }}
+                          className="w-1/2 p-2 border rounded"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                    ))}
+                    <div className="mt-2 pt-2 border-t">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Total Debt:</span>
+                        <span className="text-lg font-bold text-blue-600">
+                          ${qualificationData.totalDebt.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Required Checkboxes */}
+              <div className="space-y-3 mb-6">
+                <h4 className="font-medium mb-2">Program Requirements:</h4>
+                <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={qualificationData.hasMinimumPerCreditor}
+                      onChange={(e) => setQualificationData(prev => ({
+                        ...prev,
+                        hasMinimumPerCreditor: e.target.checked
+                      }))}
+                      className="mr-2"
+                    />
+                    <span>Minimum $500 per creditor</span>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={qualificationData.canAutoPayments}
+                      onChange={(e) => setQualificationData(prev => ({
+                        ...prev,
+                        canAutoPayments: e.target.checked
+                      }))}
+                      className="mr-2"
+                    />
+                    <span>Can set up auto-draft payments</span>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={qualificationData.hasCreditorPaymentHistory}
+                      onChange={(e) => setQualificationData(prev => ({
+                        ...prev,
+                        hasCreditorPaymentHistory: e.target.checked
+                      }))}
+                      className="mr-2"
+                    />
+                    <span>At least 1 payment made to each creditor</span>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={qualificationData.hasRequiredDocs}
+                      onChange={(e) => setQualificationData(prev => ({
+                        ...prev,
+                        hasRequiredDocs: e.target.checked
+                      }))}
+                      className="mr-2"
+                    />
+                    <span>Has required documentation (SSN, agreements, etc.)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3 border-t pt-6">
+                <button
+                  onClick={() => setShowQualificationModal(false)}
+                  className="flex-1 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (checkQualification()) {
+                      handleStepChange({ text: "Continue", next: "checkDebt" });
+                      setShowQualificationModal(false);
+                    }
+                  }}
+                  disabled={!checkQualification()}
+                  className={`flex-1 py-3 px-4 rounded-lg ${
+                    checkQualification()
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  Continue
+                </button>
+              </div>
+
+              {/* Error Messages */}
+              {!checkQualification() && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-lg">
+                  <p className="text-sm text-red-600 font-medium mb-2">
+                    Please complete all qualification requirements to continue:
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-red-600">
+                    {qualificationData.debtTypes.length === 0 && <li>Select at least one debt type</li>}
+                    {qualificationData.totalDebt < 10000 && <li>Total debt must be at least $10,000</li>}
+                    {!qualificationData.hasMinimumPerCreditor && <li>Confirm minimum $500 per creditor</li>}
+                    {!qualificationData.canAutoPayments && <li>Confirm ability to set up auto-draft payments</li>}
+                    {!qualificationData.hasCreditorPaymentHistory && <li>Confirm at least 1 payment made to each creditor</li>}
+                    {!qualificationData.hasRequiredDocs && <li>Confirm required documentation is available</li>}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>
