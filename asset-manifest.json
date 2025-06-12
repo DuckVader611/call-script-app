@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/call-script-app/static/css/main.7ea4a342.css",
-    "main.js": "/call-script-app/static/js/main.f3768f17.js",
+    "main.js": "/call-script-app/static/js/main.0bcf68c4.js",
     "index.html": "/call-script-app/index.html",
     "main.7ea4a342.css.map": "/call-script-app/static/css/main.7ea4a342.css.map",
-    "main.f3768f17.js.map": "/call-script-app/static/js/main.f3768f17.js.map"
+    "main.0bcf68c4.js.map": "/call-script-app/static/js/main.0bcf68c4.js.map"
   },
   "entrypoints": [
     "static/css/main.7ea4a342.css",
-    "static/js/main.f3768f17.js"
+    "static/js/main.0bcf68c4.js"
   ]
 }
